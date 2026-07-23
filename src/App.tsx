@@ -1,12 +1,10 @@
 import { AnimatePresence } from "framer-motion";
-import { levels } from "./data/levels";
-import { useQuizStore, continueToNextLevel } from "./store/quizStore";
+import { useQuizStore } from "./store/quizStore";
 import { ProgressBar } from "./components/ProgressBar";
 import { GameBar } from "./components/GameBar";
 import { LevelSelectScreen } from "./components/LevelSelectScreen";
 import { QuestionCard } from "./components/QuestionCard";
 import { FeedbackBanner } from "./components/FeedbackBanner";
-import { LevelCompleteScreen } from "./components/LevelCompleteScreen";
 import { FinalResultsScreen } from "./components/FinalResultsScreen";
 
 function App() {
@@ -24,7 +22,7 @@ function App() {
     totalQuestions,
     isIntermediateUnlocked,
     isExpertUnlocked,
-    startAtLevel,
+    startBeginnerQuiz,
     startExpertQuiz,
     startIntermediateQuiz,
     selectAnswer,
@@ -69,13 +67,12 @@ function App() {
             {phase === "home" ? (
               <LevelSelectScreen
                 key="home"
-                levels={levels}
                 totalXp={totalXp}
                 isIntermediateUnlocked={isIntermediateUnlocked()}
                 isExpertUnlocked={isExpertUnlocked()}
-                onSelectLevel={startAtLevel}
-                onStartExpert={startExpertQuiz}
+                onStartBeginner={startBeginnerQuiz}
                 onStartIntermediate={startIntermediateQuiz}
+                onStartExpert={startExpertQuiz}
               />
             ) : phase === "question" || phase === "feedback" ? (
               <QuestionCard
@@ -85,13 +82,6 @@ function App() {
                 selectedOptionId={selectedOptionId}
                 showResult={isFeedbackVisible}
                 onSelect={selectAnswer}
-              />
-            ) : phase === "level-complete" ? (
-              <LevelCompleteScreen
-                key="level-complete"
-                level={levels[current.levelIndex]}
-                xp={xp}
-                onContinue={continueToNextLevel}
               />
             ) : (
               <FinalResultsScreen

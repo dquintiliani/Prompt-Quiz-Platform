@@ -1,22 +1,23 @@
 import { motion } from "framer-motion";
-import type { QuizLevel, QuizTheme } from "../types/quiz";
+import type { QuizTheme } from "../types/quiz";
+import { BEGINNER_QUIZ_LENGTH, beginnerQuestionBank } from "../data/beginnerQuestionBank";
 import { EXPERT_QUIZ_LENGTH, expertQuestionBank } from "../data/expertQuestionBank";
 import { INTERMEDIATE_QUIZ_LENGTH, intermediateQuestionBank } from "../data/intermediateQuestionBank";
 import {
   EXPERT_UNLOCK_XP,
   INTERMEDIATE_UNLOCK_XP,
+  beginnerLevel,
   expertLevel,
   intermediateLevel,
 } from "../store/quizStore";
 
 interface LevelSelectScreenProps {
-  levels: QuizLevel[];
   totalXp: number;
   isIntermediateUnlocked: boolean;
   isExpertUnlocked: boolean;
-  onSelectLevel: (levelIndex: number) => void;
-  onStartExpert: () => void;
+  onStartBeginner: () => void;
   onStartIntermediate: () => void;
+  onStartExpert: () => void;
 }
 
 /** Contextual color theming (principle 5): each level's container and
@@ -175,13 +176,12 @@ function LevelCard({
  *   floating accent glyph tucked into each card's corner.
  */
 export function LevelSelectScreen({
-  levels,
   totalXp,
   isIntermediateUnlocked,
   isExpertUnlocked,
-  onSelectLevel,
-  onStartExpert,
+  onStartBeginner,
   onStartIntermediate,
+  onStartExpert,
 }: LevelSelectScreenProps) {
   const xpToUnlockIntermediate = Math.max(0, INTERMEDIATE_UNLOCK_XP - totalXp);
   const xpToUnlockExpert = Math.max(0, EXPERT_UNLOCK_XP - totalXp);
@@ -204,9 +204,9 @@ export function LevelSelectScreen({
           Choose Your Level
         </h1>
         <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-quiz-body">
-          Two short levels, five questions total, or jump straight into an Intermediate or
-          Expert Challenge — pick a starting point and build your prompting skills one card
-          at a time.
+          Start with the Prompt Beginner module, then earn enough XP to unlock the
+          Intermediate and Expert Challenges — build your prompting skills one card at a
+          time.
         </p>
         <span className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-quiz-brand/25 bg-quiz-brand-soft px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-quiz-brand">
           ⭐ Total XP {totalXp}
@@ -214,20 +214,17 @@ export function LevelSelectScreen({
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {levels.map((level, index) => (
-          <LevelCard
-            key={level.id}
-            icon={level.icon}
-            theme={level.theme}
-            title={level.title}
-            metadata={`Level ${index + 1} · ${level.questions.length} questions`}
-            description={level.description}
-            ctaLabel="Start Level"
-            cornerGlyph={index % 2 === 0 ? "🎯" : "🧠"}
-            delay={index * 0.06}
-            onClick={() => onSelectLevel(index)}
-          />
-        ))}
+        <LevelCard
+          icon={beginnerLevel.icon}
+          theme={beginnerLevel.theme}
+          title={beginnerLevel.title}
+          metadata={`Beginner · ${BEGINNER_QUIZ_LENGTH} of ${beginnerQuestionBank.length} questions`}
+          description={beginnerLevel.description}
+          ctaLabel="Start Module"
+          cornerGlyph="🎯"
+          delay={0}
+          onClick={onStartBeginner}
+        />
 
         <LevelCard
           icon={intermediateLevel.icon}
@@ -237,7 +234,7 @@ export function LevelSelectScreen({
           description={intermediateLevel.description}
           ctaLabel="Start Challenge"
           cornerGlyph="📗"
-          delay={levels.length * 0.06}
+          delay={0.06}
           onClick={onStartIntermediate}
           locked={!isIntermediateUnlocked}
           xpToUnlock={xpToUnlockIntermediate}
@@ -251,7 +248,7 @@ export function LevelSelectScreen({
           description={expertLevel.description}
           ctaLabel="Start Challenge"
           cornerGlyph="🎲"
-          delay={(levels.length + 1) * 0.06}
+          delay={0.12}
           onClick={onStartExpert}
           locked={!isExpertUnlocked}
           xpToUnlock={xpToUnlockExpert}

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { levels } from "../data/levels";
+import { BEGINNER_QUIZ_LENGTH, beginnerQuestionBank } from "../data/beginnerQuestionBank";
 import { EXPERT_QUIZ_LENGTH, expertQuestionBank } from "../data/expertQuestionBank";
 import { INTERMEDIATE_QUIZ_LENGTH, intermediateQuestionBank } from "../data/intermediateQuestionBank";
 import { loadStoredXp, saveStoredXp } from "../lib/xpStorage";
@@ -13,26 +13,15 @@ export const EXPERT_UNLOCK_XP = 200;
 interface FlatQuestion {
   question: QuizQuestion;
   level: QuizLevel;
-  levelIndex: number;
-  isLastInLevel: boolean;
 }
 
-const flatQuestions: FlatQuestion[] = levels.flatMap((level, levelIndex) =>
-  level.questions.map((question, i) => ({
-    question,
-    level,
-    levelIndex,
-    isLastInLevel: i === level.questions.length - 1,
-  })),
-);
-
-const expertLevel: QuizLevel = {
-  id: "expert-challenge",
-  title: "Expert Challenge",
-  description: "10 random questions pulled fresh from a 30-question expert bank every run.",
-  icon: "🎓",
-  theme: "expert",
-  questions: expertQuestionBank,
+const beginnerLevel: QuizLevel = {
+  id: "beginner-challenge",
+  title: "Prompt Beginner",
+  description: "10 random questions pulled fresh from a 30-question beginner bank every run.",
+  icon: "🌱",
+  theme: "sunset",
+  questions: beginnerQuestionBank,
 };
 
 const intermediateLevel: QuizLevel = {
@@ -42,6 +31,15 @@ const intermediateLevel: QuizLevel = {
   icon: "📘",
   theme: "intermediate",
   questions: intermediateQuestionBank,
+};
+
+const expertLevel: QuizLevel = {
+  id: "expert-challenge",
+  title: "Expert Challenge",
+  description: "10 random questions pulled fresh from a 30-question expert bank every run.",
+  icon: "🎓",
+  theme: "expert",
+  questions: expertQuestionBank,
 };
 
 /** Fisher-Yates shuffle — never mutates the input array. */
@@ -54,27 +52,19 @@ function shuffled<T>(items: T[]): T[] {
   return copy;
 }
 
-function buildExpertRun(): FlatQuestion[] {
-  const picks = shuffled(expertQuestionBank).slice(0, EXPERT_QUIZ_LENGTH);
-  return picks.map((question, i) => ({
-    question,
-    level: expertLevel,
-    levelIndex: -1,
-    isLastInLevel: i === picks.length - 1,
-  }));
+function buildRun(bank: QuizQuestion[], level: QuizLevel, length: number): FlatQuestion[] {
+  return shuffled(bank)
+    .slice(0, length)
+    .map((question) => ({ question, level }));
 }
 
-function buildIntermediateRun(): FlatQuestion[] {
-  const picks = shuffled(intermediateQuestionBank).slice(0, INTERMEDIATE_QUIZ_LENGTH);
-  return picks.map((question, i) => ({
-    question,
-    level: intermediateLevel,
-    levelIndex: -1,
-    isLastInLevel: i === picks.length - 1,
-  }));
-}
+/** Deterministic placeholder shown only while `phase` is "home" (never rendered). */
+const placeholderRun: FlatQuestion[] = beginnerQuestionBank.map((question) => ({
+  question,
+  level: beginnerLevel,
+}));
 
-export type QuizPhase = "home" | "question" | "feedback" | "level-complete" | "finished";
+export type QuizPhase = "home" | "question" | "feedback" | "finished";
 
 interface QuizState {
   activeQuestions: FlatQuestion[];
@@ -94,17 +84,32 @@ interface QuizState {
 
   isIntermediateUnlocked: () => boolean;
   isExpertUnlocked: () => boolean;
-  startAtLevel: (levelIndex: number) => void;
-  startExpertQuiz: () => void;
+  startBeginnerQuiz: () => void;
   startIntermediateQuiz: () => void;
+  startExpertQuiz: () => void;
   selectAnswer: (optionId: string) => void;
   advance: () => void;
   toggleSound: () => void;
   restart: () => void;
 }
 
+function runState(run: FlatQuestion[]) {
+  return {
+    activeQuestions: run,
+    cursor: 0,
+    current: run[0],
+    totalQuestions: run.length,
+    phase: "question" as const,
+    selectedOptionId: null,
+    score: 0,
+    streak: 0,
+    bestStreak: 0,
+    xp: 0,
+  };
+}
+
 export const useQuizStore = create<QuizState>((set, get) => ({
-  activeQuestions: flatQuestions,
+  activeQuestions: placeholderRun,
   cursor: 0,
   phase: "home",
   selectedOptionId: null,
@@ -115,61 +120,24 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   totalXp: loadStoredXp(),
   soundOn: true,
 
-  current: flatQuestions[0],
-  totalQuestions: flatQuestions.length,
+  current: placeholderRun[0],
+  totalQuestions: placeholderRun.length,
 
   isIntermediateUnlocked: () => get().totalXp >= INTERMEDIATE_UNLOCK_XP,
   isExpertUnlocked: () => get().totalXp >= EXPERT_UNLOCK_XP,
 
-  startAtLevel: (levelIndex) => {
-    const startCursor = flatQuestions.findIndex((q) => q.levelIndex === levelIndex);
-    const cursor = startCursor === -1 ? 0 : startCursor;
-    set({
-      activeQuestions: flatQuestions,
-      cursor,
-      current: flatQuestions[cursor],
-      totalQuestions: flatQuestions.length,
-      phase: "question",
-      selectedOptionId: null,
-      score: 0,
-      streak: 0,
-      bestStreak: 0,
-      xp: 0,
-    });
-  },
-
-  startExpertQuiz: () => {
-    if (!get().isExpertUnlocked()) return;
-    const run = buildExpertRun();
-    set({
-      activeQuestions: run,
-      cursor: 0,
-      current: run[0],
-      totalQuestions: run.length,
-      phase: "question",
-      selectedOptionId: null,
-      score: 0,
-      streak: 0,
-      bestStreak: 0,
-      xp: 0,
-    });
+  startBeginnerQuiz: () => {
+    set(runState(buildRun(beginnerQuestionBank, beginnerLevel, BEGINNER_QUIZ_LENGTH)));
   },
 
   startIntermediateQuiz: () => {
     if (!get().isIntermediateUnlocked()) return;
-    const run = buildIntermediateRun();
-    set({
-      activeQuestions: run,
-      cursor: 0,
-      current: run[0],
-      totalQuestions: run.length,
-      phase: "question",
-      selectedOptionId: null,
-      score: 0,
-      streak: 0,
-      bestStreak: 0,
-      xp: 0,
-    });
+    set(runState(buildRun(intermediateQuestionBank, intermediateLevel, INTERMEDIATE_QUIZ_LENGTH)));
+  },
+
+  startExpertQuiz: () => {
+    if (!get().isExpertUnlocked()) return;
+    set(runState(buildRun(expertQuestionBank, expertLevel, EXPERT_QUIZ_LENGTH)));
   },
 
   selectAnswer: (optionId) => {
@@ -196,17 +164,10 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
   advance: () => {
     const { activeQuestions, cursor } = get();
-    const current = activeQuestions[cursor];
     const nextCursor = cursor + 1;
-    const isLastQuestion = nextCursor >= activeQuestions.length;
 
-    if (isLastQuestion) {
+    if (nextCursor >= activeQuestions.length) {
       set({ phase: "finished" });
-      return;
-    }
-
-    if (current.isLastInLevel) {
-      set({ phase: "level-complete" });
       return;
     }
 
@@ -222,10 +183,10 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
   restart: () =>
     set({
-      activeQuestions: flatQuestions,
+      activeQuestions: placeholderRun,
       cursor: 0,
-      current: flatQuestions[0],
-      totalQuestions: flatQuestions.length,
+      current: placeholderRun[0],
+      totalQuestions: placeholderRun.length,
       phase: "home",
       selectedOptionId: null,
       score: 0,
@@ -235,17 +196,4 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     }),
 }));
 
-/** Called from the level-complete screen to move into the next level's first question. */
-export function continueToNextLevel() {
-  useQuizStore.setState((state) => {
-    const nextCursor = state.cursor + 1;
-    return {
-      cursor: nextCursor,
-      current: state.activeQuestions[nextCursor],
-      phase: "question",
-      selectedOptionId: null,
-    };
-  });
-}
-
-export { flatQuestions, expertLevel, intermediateLevel };
+export { beginnerLevel, expertLevel, intermediateLevel };
