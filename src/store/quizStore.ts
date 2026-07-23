@@ -18,7 +18,7 @@ const flatQuestions: FlatQuestion[] = levels.flatMap((level, levelIndex) =>
   })),
 );
 
-export type QuizPhase = "question" | "feedback" | "level-complete" | "finished";
+export type QuizPhase = "home" | "question" | "feedback" | "level-complete" | "finished";
 
 interface QuizState {
   cursor: number;
@@ -33,6 +33,7 @@ interface QuizState {
   current: FlatQuestion;
   totalQuestions: number;
 
+  startAtLevel: (levelIndex: number) => void;
   selectAnswer: (optionId: string) => void;
   advance: () => void;
   toggleSound: () => void;
@@ -41,7 +42,7 @@ interface QuizState {
 
 export const useQuizStore = create<QuizState>((set, get) => ({
   cursor: 0,
-  phase: "question",
+  phase: "home",
   selectedOptionId: null,
   score: 0,
   streak: 0,
@@ -51,6 +52,17 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
   current: flatQuestions[0],
   totalQuestions: flatQuestions.length,
+
+  startAtLevel: (levelIndex) => {
+    const startCursor = flatQuestions.findIndex((q) => q.levelIndex === levelIndex);
+    const cursor = startCursor === -1 ? 0 : startCursor;
+    set({
+      cursor,
+      current: flatQuestions[cursor],
+      phase: "question",
+      selectedOptionId: null,
+    });
+  },
 
   selectAnswer: (optionId) => {
     const { cursor, streak, bestStreak, score, xp } = get();
@@ -98,7 +110,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     set({
       cursor: 0,
       current: flatQuestions[0],
-      phase: "question",
+      phase: "home",
       selectedOptionId: null,
       score: 0,
       streak: 0,

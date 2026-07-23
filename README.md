@@ -14,10 +14,11 @@ npm run dev
 
 ```
 src/
-  types/quiz.ts               question/level/option types
+  types/quiz.ts               question/level/option types (+ icon/theme per level)
   data/levels.ts               sample quiz content (levels -> questions)
-  store/quizStore.ts           Zustand store: cursor, phase, score, streak, XP
+  store/quizStore.ts           Zustand store: phase (home/question/…), cursor, score, streak, XP
   components/
+    LevelSelectScreen.tsx      home screen: hero collage + grid of level cards
     ProgressBar.tsx            step counter + progress track
     GameBar.tsx                XP, streak, sound toggle
     QuestionCard.tsx           active question + slide transition
@@ -25,20 +26,30 @@ src/
     FeedbackBanner.tsx         post-answer explanation + continue CTA
     LevelCompleteScreen.tsx    end-of-level celebration
     FinalResultsScreen.tsx     end-of-quiz summary + replay
-  App.tsx                      wires store state to the phase being shown
+  App.tsx                      atmosphere background + wires store state to the phase being shown
 ```
 
 ## Design principles → implementation
 
 | Principle | Where it lives |
 |---|---|
-| One Thought at a Time | `App.tsx` renders a single `QuestionCard` per phase; `AnimatePresence mode="wait"` keeps exactly one on screen |
+| Structured Grid Systems | `LevelSelectScreen.tsx` — strict 1/2/3-column grid, uniform card padding, borders, and heights |
+| Consistent Aspect Ratios | Level icon tiles are `aspect-square`; hero collage panels are uniform vertical slices; cards use 8–12px (`rounded-xl`) corners throughout |
+| Typographic Hierarchy | Bold centered section header ("Choose Your Level"), medium-weight card titles, muted `#4a4a4a` body copy (`text-quiz-body`), uppercase tracked-out metadata ("LEVEL 1 · 3 QUESTIONS") |
+| Minimalist CTAs | Small uppercase pill buttons ("START LEVEL", "CONTINUE", "NEXT LEVEL", "PLAY AGAIN") instead of heavy gradient buttons |
+| Contextual Color Theming | `QuizTheme` (`sunset` / `brand` / `neutral`) on each level drives its card container + accent color while every card keeps the same structure — see `themeClasses` in `LevelSelectScreen.tsx` and `--color-quiz-*` tokens in `index.css` |
+| Logos Over Photography | `HeroCollage` in `LevelSelectScreen.tsx` layers a white wordmark over a gradient "photo" panel with a dark scrim for contrast |
+| Dynamic Collage Layouts | `HeroCollage` splits the hero banner into 5 vertical gradient slices |
+| Subtle Atmosphere | `.quiz-atmosphere` in `index.css` — soft radial light leaks + faint pulsing sparkles behind all content, `pointer-events: none` |
+| Centered, Stacked Cards | Level cards and end screens: icon/media top → title → metadata → body copy → CTA, all center-aligned |
+| Whimsical Micro-Details | A small ✨ above the home header, tiny 🎯/🧠 glyphs tucked into each level card's corner |
+| One Thought at a Time | `App.tsx` renders a single screen per phase; `AnimatePresence mode="wait"` keeps exactly one on screen |
 | Ambient Progress & Predictability | `ProgressBar.tsx` — thin track + "N of M" counter, no more |
-| Thumb-First Ergonomics | `AnswerOption.tsx` / `FeedbackBanner.tsx` — 48px+ full-width targets, primary actions docked low |
+| Thumb-First Ergonomics | `AnswerOption.tsx` / `FeedbackBanner.tsx` — 48px+ tall targets, primary actions docked low |
 | Instant Visual Reciprocity | `quizStore.selectAnswer` flips to a `feedback` phase immediately; `FeedbackBanner.tsx` + `AnswerOption.tsx` render the correct/incorrect state and explanation before advancing |
 | Gamified Progression & Nostalgia | `GameBar.tsx` (XP, streak), `LevelCompleteScreen.tsx`, `FinalResultsScreen.tsx` |
 | Seamless Micro-Interactions | Framer Motion throughout: press-scale on buttons, spring-driven progress bar, side-slide question transitions, streak/checkmark pop-ins |
-| Responsive Adaptability | Fluid single-column layout (`max-w-xl`, Tailwind `sm:`/`lg:` variants) that scales from phone to desktop without structural changes |
+| Responsive Adaptability | Fluid layouts (`max-w-xl`/`max-w-5xl`, Tailwind `sm:`/`lg:` variants) that scale from phone to desktop without structural changes |
 
 ## Content
 

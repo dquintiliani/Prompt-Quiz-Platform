@@ -27,7 +27,7 @@ export function FinalResultsScreen({
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ type: "spring", stiffness: 260, damping: 24 }}
-      className="mx-auto flex w-full max-w-xl flex-col items-center gap-6 px-4 py-16 text-center"
+      className="mx-auto flex w-full max-w-xl flex-col items-center gap-4 rounded-xl border border-black/5 bg-quiz-surface px-4 py-12 text-center shadow-sm sm:py-16"
     >
       <motion.div
         initial={{ y: -20, opacity: 0 }}
@@ -39,25 +39,25 @@ export function FinalResultsScreen({
         🎉
       </motion.div>
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-quiz-accent-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-quiz-brand">
           Quiz Complete
         </p>
-        <h2 className="mt-1 text-3xl font-bold text-white">
+        <h2 className="mt-1 text-3xl font-bold text-quiz-navy">
           {score}/{totalQuestions} ({pct}%)
         </h2>
       </div>
-      <div className="flex gap-4 font-mono text-sm">
-        <span className="rounded-md border border-quiz-accent/40 bg-quiz-accent/10 px-3 py-1.5 text-quiz-accent-2">
+      <div className="flex gap-3 text-xs font-semibold uppercase tracking-wide">
+        <span className="rounded-full border border-quiz-brand/25 bg-quiz-brand-soft px-3 py-1.5 text-quiz-brand">
           XP {xp}
         </span>
-        <span className="rounded-md border border-orange-400/40 bg-orange-400/10 px-3 py-1.5 text-orange-300">
+        <span className="rounded-full border border-quiz-sunset/30 bg-quiz-sunset-soft px-3 py-1.5 text-quiz-sunset">
           Best streak 🔥 {bestStreak}
         </span>
       </div>
       <button
         type="button"
         onClick={onRestart}
-        className="min-h-[48px] w-full max-w-xs rounded-xl bg-gradient-to-r from-quiz-accent to-quiz-accent-2 text-base font-semibold text-white transition-transform active:scale-[0.97]"
+        className="min-h-[48px] w-full max-w-xs rounded-full bg-quiz-navy text-sm font-semibold uppercase tracking-widest text-white transition-transform active:scale-[0.97]"
       >
         Play Again
       </button>

@@ -16,8 +16,8 @@ interface GameBarProps {
 export function GameBar({ xp, streak, soundOn, onToggleSound }: GameBarProps) {
   return (
     <div className="mx-auto flex w-full max-w-xl items-center justify-between px-4 pb-2 sm:px-6">
-      <div className="flex items-center gap-3 font-mono text-sm">
-        <span className="rounded-md border border-quiz-accent/40 bg-quiz-accent/10 px-2 py-1 text-quiz-accent-2">
+      <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide">
+        <span className="rounded-full border border-quiz-brand/25 bg-quiz-brand-soft px-3 py-1 text-quiz-brand">
           XP {xp}
         </span>
         <AnimatePresence>
@@ -27,7 +27,7 @@ export function GameBar({ xp, streak, soundOn, onToggleSound }: GameBarProps) {
               initial={{ scale: 0.6, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.6, opacity: 0 }}
-              className="rounded-md border border-orange-400/40 bg-orange-400/10 px-2 py-1 text-orange-300"
+              className="rounded-full border border-quiz-sunset/30 bg-quiz-sunset-soft px-3 py-1 text-quiz-sunset"
             >
               🔥 {streak}
             </motion.span>
@@ -39,7 +39,7 @@ export function GameBar({ xp, streak, soundOn, onToggleSound }: GameBarProps) {
         onClick={onToggleSound}
         aria-label={soundOn ? "Mute sound" : "Unmute sound"}
         aria-pressed={soundOn}
-        className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg text-white/70 transition-transform active:scale-90"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-quiz-surface text-lg text-quiz-muted transition-transform active:scale-90"
       >
         {soundOn ? "🔊" : "🔇"}
       </button>
