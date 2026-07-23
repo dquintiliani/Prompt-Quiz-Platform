@@ -5,6 +5,8 @@ export const levels: QuizLevel[] = [
     id: "level-1",
     title: "Prompt Basics",
     description: "Warm up with the fundamentals of writing good prompts.",
+    icon: "💡",
+    theme: "sunset",
     questions: [
       {
         id: "q1",
@@ -54,6 +56,8 @@ export const levels: QuizLevel[] = [
     id: "level-2",
     title: "Prompt Structuring",
     description: "Level up by organizing prompts for complex tasks.",
+    icon: "🧩",
+    theme: "brand",
     questions: [
       {
         id: "q4",

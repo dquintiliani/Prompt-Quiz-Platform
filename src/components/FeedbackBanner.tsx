@@ -31,15 +31,15 @@ export function FeedbackBanner({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 24 }}
           transition={{ type: "spring", stiffness: 300, damping: 26 }}
-          className="fixed inset-x-0 bottom-0 z-10 border-t border-white/10 bg-quiz-surface/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur sm:px-6"
+          className="fixed inset-x-0 bottom-0 z-10 border-t border-black/5 bg-quiz-surface/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 shadow-[0_-4px_16px_rgba(16,26,51,0.06)] backdrop-blur sm:px-6"
         >
-          <div className="mx-auto flex max-w-xl flex-col gap-3">
+          <div className="mx-auto flex max-w-xl flex-col items-center gap-3 text-center">
             <div className="flex items-center gap-2">
               <span
                 className={`flex h-6 w-6 items-center justify-center rounded-full text-sm font-bold ${
                   isCorrect
-                    ? "bg-quiz-correct/20 text-quiz-correct"
-                    : "bg-quiz-incorrect/20 text-quiz-incorrect"
+                    ? "bg-quiz-correct-soft text-quiz-correct"
+                    : "bg-quiz-incorrect-soft text-quiz-incorrect"
                 }`}
                 aria-hidden
               >
@@ -49,11 +49,11 @@ export function FeedbackBanner({
                 {isCorrect ? "Correct!" : "Not quite"}
               </p>
             </div>
-            <p className="text-sm leading-relaxed text-white/70">{question.explanation}</p>
+            <p className="text-sm leading-relaxed text-quiz-body">{question.explanation}</p>
             <button
               type="button"
               onClick={onContinue}
-              className="min-h-[48px] w-full rounded-xl bg-gradient-to-r from-quiz-accent to-quiz-accent-2 text-base font-semibold text-white transition-transform duration-150 active:scale-[0.97]"
+              className="min-h-[48px] w-full max-w-xs rounded-full bg-quiz-navy text-sm font-semibold uppercase tracking-widest text-white transition-transform duration-150 active:scale-[0.97]"
             >
               {isLastQuestion ? "Finish" : "Continue"}
             </button>

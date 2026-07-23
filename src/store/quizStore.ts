@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { levels } from "../data/levels";
+import { EXPERT_QUIZ_LENGTH, expertQuestionBank } from "../data/expertQuestionBank";
 import type { QuizLevel, QuizQuestion } from "../types/quiz";
 
 interface FlatQuestion {
@@ -18,9 +19,39 @@ const flatQuestions: FlatQuestion[] = levels.flatMap((level, levelIndex) =>
   })),
 );
 
-export type QuizPhase = "question" | "feedback" | "level-complete" | "finished";
+const expertLevel: QuizLevel = {
+  id: "expert-challenge",
+  title: "Expert Challenge",
+  description: "10 random questions pulled fresh from a 30-question expert bank every run.",
+  icon: "🎓",
+  theme: "expert",
+  questions: expertQuestionBank,
+};
+
+/** Fisher-Yates shuffle — never mutates the input array. */
+function shuffled<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function buildExpertRun(): FlatQuestion[] {
+  const picks = shuffled(expertQuestionBank).slice(0, EXPERT_QUIZ_LENGTH);
+  return picks.map((question, i) => ({
+    question,
+    level: expertLevel,
+    levelIndex: -1,
+    isLastInLevel: i === picks.length - 1,
+  }));
+}
+
+export type QuizPhase = "home" | "question" | "feedback" | "level-complete" | "finished";
 
 interface QuizState {
+  activeQuestions: FlatQuestion[];
   cursor: number;
   phase: QuizPhase;
   selectedOptionId: string | null;
@@ -33,6 +64,8 @@ interface QuizState {
   current: FlatQuestion;
   totalQuestions: number;
 
+  startAtLevel: (levelIndex: number) => void;
+  startExpertQuiz: () => void;
   selectAnswer: (optionId: string) => void;
   advance: () => void;
   toggleSound: () => void;
@@ -40,8 +73,9 @@ interface QuizState {
 }
 
 export const useQuizStore = create<QuizState>((set, get) => ({
+  activeQuestions: flatQuestions,
   cursor: 0,
-  phase: "question",
+  phase: "home",
   selectedOptionId: null,
   score: 0,
   streak: 0,
@@ -52,9 +86,42 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   current: flatQuestions[0],
   totalQuestions: flatQuestions.length,
 
+  startAtLevel: (levelIndex) => {
+    const startCursor = flatQuestions.findIndex((q) => q.levelIndex === levelIndex);
+    const cursor = startCursor === -1 ? 0 : startCursor;
+    set({
+      activeQuestions: flatQuestions,
+      cursor,
+      current: flatQuestions[cursor],
+      totalQuestions: flatQuestions.length,
+      phase: "question",
+      selectedOptionId: null,
+      score: 0,
+      streak: 0,
+      bestStreak: 0,
+      xp: 0,
+    });
+  },
+
+  startExpertQuiz: () => {
+    const run = buildExpertRun();
+    set({
+      activeQuestions: run,
+      cursor: 0,
+      current: run[0],
+      totalQuestions: run.length,
+      phase: "question",
+      selectedOptionId: null,
+      score: 0,
+      streak: 0,
+      bestStreak: 0,
+      xp: 0,
+    });
+  },
+
   selectAnswer: (optionId) => {
-    const { cursor, streak, bestStreak, score, xp } = get();
-    const { question } = flatQuestions[cursor];
+    const { activeQuestions, cursor, streak, bestStreak, score, xp } = get();
+    const { question } = activeQuestions[cursor];
     const isCorrect = optionId === question.correctOptionId;
     const nextStreak = isCorrect ? streak + 1 : 0;
 
@@ -69,10 +136,10 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   },
 
   advance: () => {
-    const { cursor } = get();
-    const current = flatQuestions[cursor];
+    const { activeQuestions, cursor } = get();
+    const current = activeQuestions[cursor];
     const nextCursor = cursor + 1;
-    const isLastQuestion = nextCursor >= flatQuestions.length;
+    const isLastQuestion = nextCursor >= activeQuestions.length;
 
     if (isLastQuestion) {
       set({ phase: "finished" });
@@ -86,7 +153,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
     set({
       cursor: nextCursor,
-      current: flatQuestions[nextCursor],
+      current: activeQuestions[nextCursor],
       phase: "question",
       selectedOptionId: null,
     });
@@ -96,9 +163,11 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
   restart: () =>
     set({
+      activeQuestions: flatQuestions,
       cursor: 0,
       current: flatQuestions[0],
-      phase: "question",
+      totalQuestions: flatQuestions.length,
+      phase: "home",
       selectedOptionId: null,
       score: 0,
       streak: 0,
@@ -113,11 +182,11 @@ export function continueToNextLevel() {
     const nextCursor = state.cursor + 1;
     return {
       cursor: nextCursor,
-      current: flatQuestions[nextCursor],
+      current: state.activeQuestions[nextCursor],
       phase: "question",
       selectedOptionId: null,
     };
   });
 }
 
-export { flatQuestions };
+export { flatQuestions, expertLevel };

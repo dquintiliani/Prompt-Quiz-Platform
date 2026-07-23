@@ -39,11 +39,11 @@ export function AnswerOption({
       : "idle";
 
   const stateClasses: Record<string, string> = {
-    idle: "border-white/10 bg-white/5 hover:border-white/25 hover:bg-white/10",
-    selected: "border-quiz-accent bg-quiz-accent/15 shadow-[0_0_0_1px_var(--color-quiz-accent)]",
-    correct: "border-quiz-correct bg-quiz-correct/15 shadow-[0_0_0_1px_var(--color-quiz-correct)]",
-    incorrect: "border-quiz-incorrect bg-quiz-incorrect/15 shadow-[0_0_0_1px_var(--color-quiz-incorrect)]",
-    neutral: "border-white/10 bg-white/5 opacity-60",
+    idle: "border-black/10 bg-quiz-surface hover:border-quiz-brand/30 hover:bg-quiz-brand-soft",
+    selected: "border-quiz-brand bg-quiz-brand-soft shadow-[0_0_0_1px_var(--color-quiz-brand)]",
+    correct: "border-quiz-correct bg-quiz-correct-soft shadow-[0_0_0_1px_var(--color-quiz-correct)]",
+    incorrect: "border-quiz-incorrect bg-quiz-incorrect-soft shadow-[0_0_0_1px_var(--color-quiz-incorrect)]",
+    neutral: "border-black/10 bg-quiz-surface opacity-60",
   };
 
   return (
@@ -55,7 +55,7 @@ export function AnswerOption({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.25 }}
       whileTap={disabled ? undefined : { scale: 0.97 }}
-      className={`flex min-h-[48px] w-full items-center justify-between gap-3 rounded-2xl border px-5 py-4 text-left text-base font-medium text-white transition-colors duration-200 ${stateClasses[state]} disabled:cursor-default`}
+      className={`flex min-h-[48px] w-full items-center justify-between gap-3 rounded-xl border px-5 py-4 text-left text-base font-medium text-quiz-navy transition-colors duration-200 ${stateClasses[state]} disabled:cursor-default`}
     >
       <span>{option.label}</span>
       {showResult && isCorrectAnswer && (

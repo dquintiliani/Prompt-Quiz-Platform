@@ -36,12 +36,12 @@ export function QuestionCard({
       animate="center"
       exit="exit"
       transition={{ type: "spring", stiffness: 260, damping: 28 }}
-      className="mx-auto w-full max-w-xl"
+      className="mx-auto w-full max-w-xl rounded-xl border border-black/5 bg-quiz-surface p-6 shadow-sm sm:p-8"
     >
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-quiz-accent-2">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-quiz-brand">
         {levelTitle}
       </p>
-      <h2 className="mb-6 text-xl font-semibold leading-snug text-white sm:text-2xl">
+      <h2 className="mb-6 text-xl font-semibold leading-snug text-quiz-navy sm:text-2xl">
         {question.prompt}
       </h2>
       <div className="flex flex-col gap-3">
