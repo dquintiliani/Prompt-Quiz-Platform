@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { levels } from "../data/levels";
 import { EXPERT_QUIZ_LENGTH, expertQuestionBank } from "../data/expertQuestionBank";
+import { INTERMEDIATE_QUIZ_LENGTH, intermediateQuestionBank } from "../data/intermediateQuestionBank";
 import type { QuizLevel, QuizQuestion } from "../types/quiz";
 
 interface FlatQuestion {
@@ -28,6 +29,15 @@ const expertLevel: QuizLevel = {
   questions: expertQuestionBank,
 };
 
+const intermediateLevel: QuizLevel = {
+  id: "intermediate-challenge",
+  title: "Intermediate Challenge",
+  description: "10 random questions pulled fresh from a 30-question intermediate bank every run.",
+  icon: "📘",
+  theme: "intermediate",
+  questions: intermediateQuestionBank,
+};
+
 /** Fisher-Yates shuffle — never mutates the input array. */
 function shuffled<T>(items: T[]): T[] {
   const copy = [...items];
@@ -43,6 +53,16 @@ function buildExpertRun(): FlatQuestion[] {
   return picks.map((question, i) => ({
     question,
     level: expertLevel,
+    levelIndex: -1,
+    isLastInLevel: i === picks.length - 1,
+  }));
+}
+
+function buildIntermediateRun(): FlatQuestion[] {
+  const picks = shuffled(intermediateQuestionBank).slice(0, INTERMEDIATE_QUIZ_LENGTH);
+  return picks.map((question, i) => ({
+    question,
+    level: intermediateLevel,
     levelIndex: -1,
     isLastInLevel: i === picks.length - 1,
   }));
@@ -66,6 +86,7 @@ interface QuizState {
 
   startAtLevel: (levelIndex: number) => void;
   startExpertQuiz: () => void;
+  startIntermediateQuiz: () => void;
   selectAnswer: (optionId: string) => void;
   advance: () => void;
   toggleSound: () => void;
@@ -105,6 +126,22 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
   startExpertQuiz: () => {
     const run = buildExpertRun();
+    set({
+      activeQuestions: run,
+      cursor: 0,
+      current: run[0],
+      totalQuestions: run.length,
+      phase: "question",
+      selectedOptionId: null,
+      score: 0,
+      streak: 0,
+      bestStreak: 0,
+      xp: 0,
+    });
+  },
+
+  startIntermediateQuiz: () => {
+    const run = buildIntermediateRun();
     set({
       activeQuestions: run,
       cursor: 0,
@@ -189,4 +226,4 @@ export function continueToNextLevel() {
   });
 }
 
-export { flatQuestions, expertLevel };
+export { flatQuestions, expertLevel, intermediateLevel };

@@ -1,12 +1,14 @@
 import { motion } from "framer-motion";
 import type { QuizLevel, QuizTheme } from "../types/quiz";
 import { EXPERT_QUIZ_LENGTH, expertQuestionBank } from "../data/expertQuestionBank";
-import { expertLevel } from "../store/quizStore";
+import { INTERMEDIATE_QUIZ_LENGTH, intermediateQuestionBank } from "../data/intermediateQuestionBank";
+import { expertLevel, intermediateLevel } from "../store/quizStore";
 
 interface LevelSelectScreenProps {
   levels: QuizLevel[];
   onSelectLevel: (levelIndex: number) => void;
   onStartExpert: () => void;
+  onStartIntermediate: () => void;
 }
 
 /** Contextual color theming (principle 5): each level's container and
@@ -32,6 +34,11 @@ const themeClasses: Record<QuizTheme, { container: string; accentText: string; i
     container: "bg-slate-100 border-slate-900/10",
     accentText: "text-amber-600",
     iconTile: "bg-gradient-to-br from-slate-700 to-indigo-900",
+  },
+  intermediate: {
+    container: "bg-emerald-50 border-emerald-900/10",
+    accentText: "text-emerald-600",
+    iconTile: "bg-gradient-to-br from-emerald-400 to-teal-600",
   },
 };
 
@@ -143,7 +150,12 @@ function LevelCard({
  * - Whimsical Micro-Details: a small sparkle above the header and a tiny
  *   floating accent glyph tucked into each card's corner.
  */
-export function LevelSelectScreen({ levels, onSelectLevel, onStartExpert }: LevelSelectScreenProps) {
+export function LevelSelectScreen({
+  levels,
+  onSelectLevel,
+  onStartExpert,
+  onStartIntermediate,
+}: LevelSelectScreenProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -162,8 +174,9 @@ export function LevelSelectScreen({ levels, onSelectLevel, onStartExpert }: Leve
           Choose Your Level
         </h1>
         <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-quiz-body">
-          Two short levels, five questions total, or jump straight into an Expert Challenge —
-          pick a starting point and build your prompting skills one card at a time.
+          Two short levels, five questions total, or jump straight into an Intermediate or
+          Expert Challenge — pick a starting point and build your prompting skills one card
+          at a time.
         </p>
       </div>
 
@@ -184,6 +197,18 @@ export function LevelSelectScreen({ levels, onSelectLevel, onStartExpert }: Leve
         ))}
 
         <LevelCard
+          icon={intermediateLevel.icon}
+          theme={intermediateLevel.theme}
+          title={intermediateLevel.title}
+          metadata={`Intermediate · ${INTERMEDIATE_QUIZ_LENGTH} of ${intermediateQuestionBank.length} questions`}
+          description={intermediateLevel.description}
+          ctaLabel="Start Challenge"
+          cornerGlyph="📗"
+          delay={levels.length * 0.06}
+          onClick={onStartIntermediate}
+        />
+
+        <LevelCard
           icon={expertLevel.icon}
           theme={expertLevel.theme}
           title={expertLevel.title}
@@ -191,7 +216,7 @@ export function LevelSelectScreen({ levels, onSelectLevel, onStartExpert }: Leve
           description={expertLevel.description}
           ctaLabel="Start Challenge"
           cornerGlyph="🎲"
-          delay={levels.length * 0.06}
+          delay={(levels.length + 1) * 0.06}
           onClick={onStartExpert}
         />
       </div>

@@ -23,6 +23,7 @@ function App() {
     totalQuestions,
     startAtLevel,
     startExpertQuiz,
+    startIntermediateQuiz,
     selectAnswer,
     advance,
     toggleSound,
@@ -68,6 +69,7 @@ function App() {
                 levels={levels}
                 onSelectLevel={startAtLevel}
                 onStartExpert={startExpertQuiz}
+                onStartIntermediate={startIntermediateQuiz}
               />
             ) : phase === "question" || phase === "feedback" ? (
               <QuestionCard

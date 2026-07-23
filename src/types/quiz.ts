@@ -17,7 +17,7 @@ export interface QuizQuestion {
 }
 
 /** Contextual color theme applied to a level's card and header accents. */
-export type QuizTheme = "sunset" | "brand" | "neutral" | "expert";
+export type QuizTheme = "sunset" | "brand" | "neutral" | "expert" | "intermediate";
 
 export interface QuizLevel {
   id: string;
