@@ -2,10 +2,18 @@ import { motion } from "framer-motion";
 import type { QuizLevel, QuizTheme } from "../types/quiz";
 import { EXPERT_QUIZ_LENGTH, expertQuestionBank } from "../data/expertQuestionBank";
 import { INTERMEDIATE_QUIZ_LENGTH, intermediateQuestionBank } from "../data/intermediateQuestionBank";
-import { expertLevel, intermediateLevel } from "../store/quizStore";
+import {
+  EXPERT_UNLOCK_XP,
+  INTERMEDIATE_UNLOCK_XP,
+  expertLevel,
+  intermediateLevel,
+} from "../store/quizStore";
 
 interface LevelSelectScreenProps {
   levels: QuizLevel[];
+  totalXp: number;
+  isIntermediateUnlocked: boolean;
+  isExpertUnlocked: boolean;
   onSelectLevel: (levelIndex: number) => void;
   onStartExpert: () => void;
   onStartIntermediate: () => void;
@@ -84,6 +92,10 @@ interface LevelCardProps {
   cornerGlyph: string;
   delay: number;
   onClick: () => void;
+  /** When set, the card renders as locked: dimmed, non-interactive, and
+   * showing the XP still needed instead of a normal CTA. */
+  locked?: boolean;
+  xpToUnlock?: number;
 }
 
 /** A single grid card: media → title → metadata → body → CTA, all
@@ -99,21 +111,27 @@ function LevelCard({
   cornerGlyph,
   delay,
   onClick,
+  locked = false,
+  xpToUnlock,
 }: LevelCardProps) {
   const classes = themeClasses[theme];
 
   return (
     <motion.button
       type="button"
-      onClick={onClick}
+      onClick={locked ? undefined : onClick}
+      disabled={locked}
+      aria-disabled={locked}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.3 }}
-      whileTap={{ scale: 0.98 }}
-      className={`relative flex h-full flex-col items-center gap-3 rounded-xl border p-6 text-center shadow-sm transition-shadow hover:shadow-md ${classes.container}`}
+      whileTap={locked ? undefined : { scale: 0.98 }}
+      className={`relative flex h-full flex-col items-center gap-3 rounded-xl border p-6 text-center shadow-sm transition-shadow ${
+        locked ? "cursor-not-allowed opacity-60 grayscale" : "hover:shadow-md"
+      } ${classes.container}`}
     >
       <span className="absolute right-3 top-3 text-base opacity-70" aria-hidden>
-        {cornerGlyph}
+        {locked ? "🔒" : cornerGlyph}
       </span>
 
       <div
@@ -131,9 +149,15 @@ function LevelCard({
 
       <p className="text-sm leading-relaxed text-quiz-body">{description}</p>
 
-      <span className="mt-2 rounded-full bg-quiz-navy px-6 py-2.5 text-xs font-semibold uppercase tracking-widest text-white">
-        {ctaLabel}
-      </span>
+      {locked ? (
+        <span className="mt-2 rounded-full bg-black/10 px-6 py-2.5 text-xs font-semibold uppercase tracking-widest text-quiz-muted">
+          🔒 Need {xpToUnlock} XP
+        </span>
+      ) : (
+        <span className="mt-2 rounded-full bg-quiz-navy px-6 py-2.5 text-xs font-semibold uppercase tracking-widest text-white">
+          {ctaLabel}
+        </span>
+      )}
     </motion.button>
   );
 }
@@ -152,10 +176,16 @@ function LevelCard({
  */
 export function LevelSelectScreen({
   levels,
+  totalXp,
+  isIntermediateUnlocked,
+  isExpertUnlocked,
   onSelectLevel,
   onStartExpert,
   onStartIntermediate,
 }: LevelSelectScreenProps) {
+  const xpToUnlockIntermediate = Math.max(0, INTERMEDIATE_UNLOCK_XP - totalXp);
+  const xpToUnlockExpert = Math.max(0, EXPERT_UNLOCK_XP - totalXp);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -178,6 +208,9 @@ export function LevelSelectScreen({
           Expert Challenge — pick a starting point and build your prompting skills one card
           at a time.
         </p>
+        <span className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-quiz-brand/25 bg-quiz-brand-soft px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-quiz-brand">
+          ⭐ Total XP {totalXp}
+        </span>
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -206,6 +239,8 @@ export function LevelSelectScreen({
           cornerGlyph="📗"
           delay={levels.length * 0.06}
           onClick={onStartIntermediate}
+          locked={!isIntermediateUnlocked}
+          xpToUnlock={xpToUnlockIntermediate}
         />
 
         <LevelCard
@@ -218,6 +253,8 @@ export function LevelSelectScreen({
           cornerGlyph="🎲"
           delay={(levels.length + 1) * 0.06}
           onClick={onStartExpert}
+          locked={!isExpertUnlocked}
+          xpToUnlock={xpToUnlockExpert}
         />
       </div>
     </motion.div>

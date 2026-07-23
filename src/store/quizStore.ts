@@ -2,7 +2,13 @@ import { create } from "zustand";
 import { levels } from "../data/levels";
 import { EXPERT_QUIZ_LENGTH, expertQuestionBank } from "../data/expertQuestionBank";
 import { INTERMEDIATE_QUIZ_LENGTH, intermediateQuestionBank } from "../data/intermediateQuestionBank";
+import { loadStoredXp, saveStoredXp } from "../lib/xpStorage";
 import type { QuizLevel, QuizQuestion } from "../types/quiz";
+
+/** Lifetime XP (persisted in local storage, never reset by a run/restart)
+ * required to unlock each challenge tier. */
+export const INTERMEDIATE_UNLOCK_XP = 50;
+export const EXPERT_UNLOCK_XP = 200;
 
 interface FlatQuestion {
   question: QuizQuestion;
@@ -79,11 +85,15 @@ interface QuizState {
   streak: number;
   bestStreak: number;
   xp: number;
+  /** Lifetime XP accumulated across all runs, persisted to local storage. */
+  totalXp: number;
   soundOn: boolean;
 
   current: FlatQuestion;
   totalQuestions: number;
 
+  isIntermediateUnlocked: () => boolean;
+  isExpertUnlocked: () => boolean;
   startAtLevel: (levelIndex: number) => void;
   startExpertQuiz: () => void;
   startIntermediateQuiz: () => void;
@@ -102,10 +112,14 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   streak: 0,
   bestStreak: 0,
   xp: 0,
+  totalXp: loadStoredXp(),
   soundOn: true,
 
   current: flatQuestions[0],
   totalQuestions: flatQuestions.length,
+
+  isIntermediateUnlocked: () => get().totalXp >= INTERMEDIATE_UNLOCK_XP,
+  isExpertUnlocked: () => get().totalXp >= EXPERT_UNLOCK_XP,
 
   startAtLevel: (levelIndex) => {
     const startCursor = flatQuestions.findIndex((q) => q.levelIndex === levelIndex);
@@ -125,6 +139,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   },
 
   startExpertQuiz: () => {
+    if (!get().isExpertUnlocked()) return;
     const run = buildExpertRun();
     set({
       activeQuestions: run,
@@ -141,6 +156,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   },
 
   startIntermediateQuiz: () => {
+    if (!get().isIntermediateUnlocked()) return;
     const run = buildIntermediateRun();
     set({
       activeQuestions: run,
@@ -157,10 +173,15 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   },
 
   selectAnswer: (optionId) => {
-    const { activeQuestions, cursor, streak, bestStreak, score, xp } = get();
+    const { activeQuestions, cursor, streak, bestStreak, score, xp, totalXp } = get();
     const { question } = activeQuestions[cursor];
     const isCorrect = optionId === question.correctOptionId;
     const nextStreak = isCorrect ? streak + 1 : 0;
+    const nextTotalXp = isCorrect ? totalXp + question.xpReward : totalXp;
+
+    if (isCorrect) {
+      saveStoredXp(nextTotalXp);
+    }
 
     set({
       selectedOptionId: optionId,
@@ -169,6 +190,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
       streak: nextStreak,
       bestStreak: Math.max(bestStreak, nextStreak),
       xp: isCorrect ? xp + question.xpReward : xp,
+      totalXp: nextTotalXp,
     });
   },
 

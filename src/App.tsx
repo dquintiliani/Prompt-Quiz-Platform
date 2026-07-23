@@ -19,8 +19,11 @@ function App() {
     streak,
     bestStreak,
     xp,
+    totalXp,
     soundOn,
     totalQuestions,
+    isIntermediateUnlocked,
+    isExpertUnlocked,
     startAtLevel,
     startExpertQuiz,
     startIntermediateQuiz,
@@ -67,6 +70,9 @@ function App() {
               <LevelSelectScreen
                 key="home"
                 levels={levels}
+                totalXp={totalXp}
+                isIntermediateUnlocked={isIntermediateUnlocked()}
+                isExpertUnlocked={isExpertUnlocked()}
                 onSelectLevel={startAtLevel}
                 onStartExpert={startExpertQuiz}
                 onStartIntermediate={startIntermediateQuiz}
