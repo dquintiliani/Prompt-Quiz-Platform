@@ -1,9 +1,12 @@
 import { motion } from "framer-motion";
 import type { QuizLevel, QuizTheme } from "../types/quiz";
+import { EXPERT_QUIZ_LENGTH, expertQuestionBank } from "../data/expertQuestionBank";
+import { expertLevel } from "../store/quizStore";
 
 interface LevelSelectScreenProps {
   levels: QuizLevel[];
   onSelectLevel: (levelIndex: number) => void;
+  onStartExpert: () => void;
 }
 
 /** Contextual color theming (principle 5): each level's container and
@@ -24,6 +27,11 @@ const themeClasses: Record<QuizTheme, { container: string; accentText: string; i
     container: "bg-quiz-bg border-black/10",
     accentText: "text-quiz-muted",
     iconTile: "bg-gradient-to-br from-slate-200 to-slate-300",
+  },
+  expert: {
+    container: "bg-slate-100 border-slate-900/10",
+    accentText: "text-amber-600",
+    iconTile: "bg-gradient-to-br from-slate-700 to-indigo-900",
   },
 };
 
@@ -59,6 +67,70 @@ function HeroCollage() {
   );
 }
 
+interface LevelCardProps {
+  icon: string;
+  theme: QuizTheme;
+  title: string;
+  metadata: string;
+  description: string;
+  ctaLabel: string;
+  cornerGlyph: string;
+  delay: number;
+  onClick: () => void;
+}
+
+/** A single grid card: media → title → metadata → body → CTA, all
+ * centered (principle 9), sharing identical dimensions and radius with
+ * every other card in the grid (principle 1). */
+function LevelCard({
+  icon,
+  theme,
+  title,
+  metadata,
+  description,
+  ctaLabel,
+  cornerGlyph,
+  delay,
+  onClick,
+}: LevelCardProps) {
+  const classes = themeClasses[theme];
+
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.3 }}
+      whileTap={{ scale: 0.98 }}
+      className={`relative flex h-full flex-col items-center gap-3 rounded-xl border p-6 text-center shadow-sm transition-shadow hover:shadow-md ${classes.container}`}
+    >
+      <span className="absolute right-3 top-3 text-base opacity-70" aria-hidden>
+        {cornerGlyph}
+      </span>
+
+      <div
+        className={`flex aspect-square w-16 items-center justify-center rounded-xl text-3xl ${classes.iconTile}`}
+        aria-hidden
+      >
+        {icon}
+      </div>
+
+      <h2 className="text-lg font-semibold text-quiz-navy">{title}</h2>
+
+      <p className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${classes.accentText}`}>
+        {metadata}
+      </p>
+
+      <p className="text-sm leading-relaxed text-quiz-body">{description}</p>
+
+      <span className="mt-2 rounded-full bg-quiz-navy px-6 py-2.5 text-xs font-semibold uppercase tracking-widest text-white">
+        {ctaLabel}
+      </span>
+    </motion.button>
+  );
+}
+
 /**
  * Design principles applied here:
  * - Structured Grid Systems: a strict, uniform 1 / 2 / 3-column grid of
@@ -71,7 +143,7 @@ function HeroCollage() {
  * - Whimsical Micro-Details: a small sparkle above the header and a tiny
  *   floating accent glyph tucked into each card's corner.
  */
-export function LevelSelectScreen({ levels, onSelectLevel }: LevelSelectScreenProps) {
+export function LevelSelectScreen({ levels, onSelectLevel, onStartExpert }: LevelSelectScreenProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -90,52 +162,38 @@ export function LevelSelectScreen({ levels, onSelectLevel }: LevelSelectScreenPr
           Choose Your Level
         </h1>
         <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-quiz-body">
-          Two short levels, five questions total — pick a starting point and build your
-          prompting skills one card at a time.
+          Two short levels, five questions total, or jump straight into an Expert Challenge —
+          pick a starting point and build your prompting skills one card at a time.
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {levels.map((level, index) => {
-          const theme = themeClasses[level.theme];
-          return (
-            <motion.button
-              key={level.id}
-              type="button"
-              onClick={() => onSelectLevel(index)}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.06, duration: 0.3 }}
-              whileTap={{ scale: 0.98 }}
-              className={`relative flex h-full flex-col items-center gap-3 rounded-xl border p-6 text-center shadow-sm transition-shadow hover:shadow-md ${theme.container}`}
-            >
-              <span className="absolute right-3 top-3 text-base opacity-70" aria-hidden>
-                {index % 2 === 0 ? "🎯" : "🧠"}
-              </span>
+        {levels.map((level, index) => (
+          <LevelCard
+            key={level.id}
+            icon={level.icon}
+            theme={level.theme}
+            title={level.title}
+            metadata={`Level ${index + 1} · ${level.questions.length} questions`}
+            description={level.description}
+            ctaLabel="Start Level"
+            cornerGlyph={index % 2 === 0 ? "🎯" : "🧠"}
+            delay={index * 0.06}
+            onClick={() => onSelectLevel(index)}
+          />
+        ))}
 
-              <div
-                className={`flex aspect-square w-16 items-center justify-center rounded-xl text-3xl ${theme.iconTile}`}
-                aria-hidden
-              >
-                {level.icon}
-              </div>
-
-              <h2 className="text-lg font-semibold text-quiz-navy">{level.title}</h2>
-
-              <p className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${theme.accentText}`}>
-                Level {index + 1} · {level.questions.length} questions
-              </p>
-
-              <p className="text-sm leading-relaxed text-quiz-body">{level.description}</p>
-
-              <span
-                className={`mt-2 rounded-full bg-quiz-navy px-6 py-2.5 text-xs font-semibold uppercase tracking-widest text-white`}
-              >
-                Start Level
-              </span>
-            </motion.button>
-          );
-        })}
+        <LevelCard
+          icon={expertLevel.icon}
+          theme={expertLevel.theme}
+          title={expertLevel.title}
+          metadata={`Expert · ${EXPERT_QUIZ_LENGTH} of ${expertQuestionBank.length} questions`}
+          description={expertLevel.description}
+          ctaLabel="Start Challenge"
+          cornerGlyph="🎲"
+          delay={levels.length * 0.06}
+          onClick={onStartExpert}
+        />
       </div>
     </motion.div>
   );

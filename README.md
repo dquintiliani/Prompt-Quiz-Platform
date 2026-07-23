@@ -16,7 +16,10 @@ npm run dev
 src/
   types/quiz.ts               question/level/option types (+ icon/theme per level)
   data/levels.ts               sample quiz content (levels -> questions)
-  store/quizStore.ts           Zustand store: phase (home/question/…), cursor, score, streak, XP
+  data/expertQuestionBank.ts   30-question expert bank, converted into QuizQuestion[]
+  store/quizStore.ts           Zustand store: phase (home/question/…), cursor, score, streak, XP,
+                                 activeQuestions (swappable per run — static levels or a random
+                                 10-question expert draw)
   components/
     LevelSelectScreen.tsx      home screen: hero collage + grid of level cards
     ProgressBar.tsx            step counter + progress track
@@ -56,3 +59,13 @@ src/
 Quiz content lives in `src/data/levels.ts` as a plain array of levels, each
 with an ordered list of questions. Add a level or question there and the
 store/UI pick it up automatically — no other code changes needed.
+
+### Expert Challenge
+
+`src/data/expertQuestionBank.ts` holds a 30-question bank covering LLM
+architecture, inference behavior, and prompt-engineering technique. Clicking
+"Expert Challenge" on the home screen (`quizStore.startExpertQuiz`) shuffles
+the bank with a Fisher-Yates shuffle and draws a fresh 10-question run every
+time — no two attempts are guaranteed to see the same set or order. Each
+question also carries a `category`/`principle` tag, shown as extra context
+above the question and folded into the feedback explanation.

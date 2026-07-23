@@ -22,6 +22,7 @@ function App() {
     soundOn,
     totalQuestions,
     startAtLevel,
+    startExpertQuiz,
     selectAnswer,
     advance,
     toggleSound,
@@ -31,6 +32,9 @@ function App() {
   const isFeedbackVisible = phase === "feedback";
   const isCorrect = selectedOptionId === current.question.correctOptionId;
   const isLastQuestion = cursor === totalQuestions - 1;
+  const levelTitle = current.question.category
+    ? `${current.level.title} · ${current.question.category}`
+    : current.level.title;
 
   return (
     // Design principle: Responsive Adaptability — a single fluid column that
@@ -59,12 +63,17 @@ function App() {
         <main className="flex flex-1 items-center justify-center px-4 pb-32 pt-6 sm:px-6">
           <AnimatePresence mode="wait">
             {phase === "home" ? (
-              <LevelSelectScreen key="home" levels={levels} onSelectLevel={startAtLevel} />
+              <LevelSelectScreen
+                key="home"
+                levels={levels}
+                onSelectLevel={startAtLevel}
+                onStartExpert={startExpertQuiz}
+              />
             ) : phase === "question" || phase === "feedback" ? (
               <QuestionCard
                 key={current.question.id}
                 question={current.question}
-                levelTitle={current.level.title}
+                levelTitle={levelTitle}
                 selectedOptionId={selectedOptionId}
                 showResult={isFeedbackVisible}
                 onSelect={selectAnswer}

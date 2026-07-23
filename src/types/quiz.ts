@@ -10,10 +10,14 @@ export interface QuizQuestion {
   correctOptionId: string;
   explanation: string;
   xpReward: number;
+  /** Optional subject grouping, used by the randomized expert question bank. */
+  category?: string;
+  /** Optional underlying concept being tested, used by the expert question bank. */
+  principle?: string;
 }
 
 /** Contextual color theme applied to a level's card and header accents. */
-export type QuizTheme = "sunset" | "brand" | "neutral";
+export type QuizTheme = "sunset" | "brand" | "neutral" | "expert";
 
 export interface QuizLevel {
   id: string;
